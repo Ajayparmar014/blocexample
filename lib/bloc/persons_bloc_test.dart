@@ -29,5 +29,7 @@ Future<Iterable<Person>> mocGetPerson2(String _) =>
     Future.value(mockedPersons2);
 
 void main() {
-  group('Testing bloc', () {});
+  group('Testing bloc', () {
+    //write our tests
+  });
 }
