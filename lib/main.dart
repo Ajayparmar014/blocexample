@@ -1,41 +1,21 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:testingbloc/bloc/bloc_actions.dart';
-import 'package:testingbloc/bloc/person.dart';
-import 'dart:developer' as devtools show log;
-import 'package:testingbloc/bloc/persons_bloc.dart';
-
-extension Log on Object {
-  void log() => devtools.log(toString());
-}
+import 'package:testingbloc/cubit/internet_cubit.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
-    MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      debugShowCheckedModeBanner: false,
-      home: BlocProvider(
-        create: (_) => PersonsBloc(),
-        child: const HomePage(),
+    BlocProvider(
+      create: (context) => InternetCubit(),
+      child: MaterialApp(
+        title: 'Bloc example',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: const HomePage(),
       ),
     ),
   );
-}
-
-Future<Iterable<Person>> getPersons(String url) => HttpClient()
-    .getUrl(Uri.parse(url))
-    .then((req) => req.close())
-    .then((resp) => resp.transform(utf8.decoder).join())
-    .then((str) => json.decode(str) as List<dynamic>)
-    .then((list) => list.map((e) => Person.fromjson(e)));
-
-extension Subscript<T> on Iterable<T> {
-  T? operator [](int index) => length > index ? elementAt(index) : null;
 }
 
 class HomePage extends StatefulWidget {
@@ -50,61 +30,43 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home Page'),
+        title: const Text('bloc Example'),
       ),
-      body: Column(
-        children: [
-          Row(
-            children: [
-              TextButton(
-                onPressed: () {
-                  context.read<PersonsBloc>().add(
-                        const LoadPersonsAction(
-                          url: person1Url,
-                          loader: getPersons,
-                        ),
-                      );
-                },
-                child: const Text('Load json #1'),
-              ),
-              TextButton(
-                onPressed: () {
-                  context.read<PersonsBloc>().add(
-                        const LoadPersonsAction(
-                          url: person2Url,
-                          loader: getPersons,
-                        ),
-                      );
-                },
-                child: const Text('Load json #2'),
-              ),
-            ],
-          ),
-          BlocBuilder<PersonsBloc, FetchResult?>(
-            buildWhen: (previousResult, currentResult) {
-              return previousResult?.persons != currentResult?.persons;
-            },
-            builder: (context, fetchResult) {
-              fetchResult?.log();
-              final persons = fetchResult?.persons;
-              if (persons == null) {
-                return const SizedBox();
-              }
-
-              return Expanded(
-                child: ListView.builder(
-                  itemCount: persons.length,
-                  itemBuilder: (context, index) {
-                    final person = persons[index]!;
-                    return ListTile(
-                      title: Text(person.name),
-                    );
-                  },
+      body: BlocConsumer<InternetCubit, InternetState>(
+        listener: (context, state) {
+          if (state == InternetState.Gained) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Internet connected!',
                 ),
-              );
+                backgroundColor: Colors.green,
+              ),
+            );
+          } else if (state == InternetState.Lost) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Internet not connected',
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          return BlocBuilder<InternetCubit, InternetState>(
+            builder: (context, state) {
+              if (state == InternetState.Gained) {
+                return const Text('Connected!');
+              } else if (state == InternetState.Lost) {
+                return const Text('Not connected');
+              } else {
+                return const Text('Loading....');
+              }
             },
-          ),
-        ],
+          );
+        },
       ),
     );
   }
