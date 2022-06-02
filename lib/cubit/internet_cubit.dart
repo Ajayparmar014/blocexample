@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-//state humne second ko use na karte hue yehi par define kar diya h
+//state humne second file ko use na karte hue yehi par define kar diya h state ko
 
 enum InternetState { Initial, Lost, Gained }
 
