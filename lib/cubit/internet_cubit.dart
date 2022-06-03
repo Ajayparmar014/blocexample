@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 //state humne second file ko use na karte hue yehi par define kar diya h state ko
 
+// ignore: constant_identifier_names
 enum InternetState { Initial, Lost, Gained }
 
 class InternetCubit extends Cubit<InternetState> {
